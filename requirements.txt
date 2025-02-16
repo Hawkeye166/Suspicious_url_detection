@@ -1,1 +1,7 @@
-"Flask\nnumpy\nscikit-learn\njoblib\ntldextract\ngunicorn" 
+Flask
+numpy
+scikit-learn
+joblib
+tldextract
+
+
