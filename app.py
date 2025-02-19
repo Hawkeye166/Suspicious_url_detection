@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pickle
 import os
-from flask_cors import CORS  # Import CORS
+
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow CORS for all routes
+CORS(app)
+
 
 # Load the trained model
 with open("Classification_model.pkl", "rb") as file:
@@ -16,25 +18,26 @@ def extract_features(url):
     has_copyright_info = 1 if "copyright" in url.lower() else 0  # Check for 'copyright' keyword
     is_https = 1 if url.startswith("https://") else 0  # Check if URL is HTTPS
     subdomain_count = url.count(".") - 1  # Count the number of subdomains
+
     return [url_length, has_copyright_info, is_https, subdomain_count]
 
-# Handle CORS Preflight Requests
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json()
-    if not data or "url" not in data:
+    data = request.json
+    url = data.get("url", "")
+
+    if not url:
         return jsonify({"error": "No URL provided"}), 400
 
-    url = data["url"]
+    # Extract features from the given URL
     features = extract_features(url)
-    prediction = model.predict([features])[0]
+    
+    # Predict using the model
+    prediction = model.predict([features])
 
-    response = jsonify({"prediction": int(prediction)})
-    response.headers.add("Access-Control-Allow-Origin", "*")  # Explicitly allow CORS
-    response.headers.add("Access-Control-Allow-Methods", "POST")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-    return response
+    return jsonify({"prediction": int(prediction[0])})
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Render sets the PORT automatically
+    port = int(os.environ.get("PORT", 10000))  # Render will set the PORT
     app.run(host="0.0.0.0", port=port)
+
