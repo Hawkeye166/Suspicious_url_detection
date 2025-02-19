@@ -4,7 +4,7 @@ import os
 from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
+CORS(app)  # Allow CORS for all routes
 
 # Load the trained model
 with open("Classification_model.pkl", "rb") as file:
@@ -19,14 +19,15 @@ def extract_features(url):
 
     return [url_length, has_copyright_info, is_https, subdomain_count]
 
-@app.route('/predict', methods=['POST', 'OPTIONS'])  # Handle preflight
+# Handle CORS Preflight Requests
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
     if request.method == 'OPTIONS':
         response = jsonify({"message": "CORS Preflight Passed"})
         response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add("Access-Control-Allow-Methods", "POST")
         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        return response, 200
+        return response, 200  # Ensure HTTP 200 status for preflight
 
     data = request.get_json()
     if not data or "url" not in data:
@@ -43,3 +44,4 @@ def predict():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))  # Render sets the PORT automatically
     app.run(host="0.0.0.0", port=port)
+
